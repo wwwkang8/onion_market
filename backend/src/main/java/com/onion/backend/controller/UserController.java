@@ -22,7 +22,7 @@ public class UserController {
     private final UserService userService;
 
 
-    @PostMapping("/create")
+    @PostMapping("/signup")
     public ResponseEntity<User> createUser(@RequestParam String username, @RequestParam String password, @RequestParam String email) {
         User user = userService.createUser(username, password, email);
         return ResponseEntity.ok(user);
