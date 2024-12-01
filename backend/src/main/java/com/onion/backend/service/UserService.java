@@ -1,14 +1,14 @@
 package com.onion.backend.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 
+import com.onion.backend.dto.SignUpUserDto;
 import com.onion.backend.entity.User;
 import com.onion.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.DeleteMapping;
 
 @Service
 @RequiredArgsConstructor
@@ -16,14 +16,15 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
 
-    public User createUser(String username, String password, String email) {
+    public User createUser(SignUpUserDto signUpUserDto) {
         User newUser = new User();
-        newUser.setUsername(username);
-        newUser.setPassword(password);
-        newUser.setEmail(email);
+        newUser.setUsername(signUpUserDto.getUsername());
+        newUser.setPassword(passwordEncoder.encode(signUpUserDto.getPassword()));
+        newUser.setEmail(signUpUserDto.getEmail());
         return userRepository.save(newUser);
     }
 
@@ -32,5 +33,9 @@ public class UserService {
 
         userRepository.deleteById(userId);
 
+    }
+
+    public List<User> getUsers() {
+        return userRepository.findAll();
     }
 }
