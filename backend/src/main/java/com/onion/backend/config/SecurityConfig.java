@@ -1,7 +1,9 @@
 package com.onion.backend.config;
 
 import com.onion.backend.jwt.JwtAuthenticationFilter;
+import com.onion.backend.jwt.JwtUtil;
 import com.onion.backend.service.CustomUserDetailsService;
+import com.onion.backend.service.JwtBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +30,10 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private final JwtUtil jwtUtil;
+
+    private final JwtBlacklistService jwtBlacklistService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
@@ -35,11 +41,15 @@ public class SecurityConfig {
             .and()
             .authorizeHttpRequests((requests) -> requests
                 .requestMatchers("/swagger-ui/**",
-                                           "/v3/api-docs/**",
-                                           "/api/users",
-                                           "/api/users/signup",
-                                           "/api/users/login").permitAll()
+                    "/v3/api-docs/**",
+                    "/api/users",
+                    "/api/users/signup",
+                    "/api/users/login").permitAll()
                 .anyRequest().authenticated()
+                .and().addFilterBefore(
+                    new JwtAuthenticationFilter(jwtUtil, customUserDetailsService,
+                        jwtBlacklistService), UsernamePasswordAuthenticationFilter.class)
+                //.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             );
 
         return http.build();

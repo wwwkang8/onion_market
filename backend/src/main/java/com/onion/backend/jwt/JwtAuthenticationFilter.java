@@ -3,11 +3,14 @@ package com.onion.backend.jwt;
 import java.io.IOException;
 import java.security.Security;
 
+import com.onion.backend.entity.JwtBlacklist;
+import com.onion.backend.service.JwtBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,11 +21,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
     private final UserDetailsService userDetailsService;
+
+    private final JwtBlacklistService jwtBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -39,8 +45,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = resolveToken(request);
+
+        log.info("JwtAuthenticationFilter 입력된 토큰 : " + token);
+
         String username = jwtUtil.extractUsername(token);
-        if(token != null && jwtUtil.validateToken(token, username)) {
+        if(token != null && jwtUtil.validateToken(token, username)
+            && !(jwtBlacklistService.isTokenBlacklisted(token))) {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken authenticationToken =

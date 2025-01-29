@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtUtil {
 
-    private String secretKey = "sBfue5IysjLNcX3nm8o9/wCJcwtrzHz4edHTlZg4huE=";
+    //private String secretKey = "sBfue5IysjLNcX3nm8o9/wCJcwtrzHz4edHTlZg4huE=";
 
     private long expirationTime = 3600000;
 
@@ -84,5 +84,26 @@ public class JwtUtil {
     public static boolean validateToken(String token, String username) {
         return (extractUsername(token).equals(username) && !isTokenExpired(token));
     }
+
+    public String getUsernameFromToken(String token) {
+        Claims claims = Jwts.parser()
+                        .setSigningKey(SECRET_KEY)
+                        .parseClaimsJws(token)
+                        .getBody();
+
+        return claims.getSubject();
+    }
+
+    public Date getExpirationDateFromToken(String token)
+    {
+        Claims claims = Jwts.parser()
+            .setSigningKey(SECRET_KEY)
+            .parseClaimsJws(token)
+            .getBody();
+
+        return claims.getExpiration();
+    }
+
+
 
 }
