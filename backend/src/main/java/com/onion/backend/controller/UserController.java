@@ -1,6 +1,10 @@
 package com.onion.backend.controller;
 
 import javax.naming.AuthenticationException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 import com.onion.backend.dto.LoginUserDto;
@@ -8,8 +12,10 @@ import com.onion.backend.dto.SignUpUserDto;
 import com.onion.backend.entity.User;
 import com.onion.backend.jwt.JwtUtil;
 import com.onion.backend.service.CustomUserDetailsService;
+import com.onion.backend.service.JwtBlacklistService;
 import com.onion.backend.service.UserService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +26,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +48,7 @@ public class UserController {
     private final AuthenticationManager authenticationManager;
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtUtil jwtUtil;
+    private final JwtBlacklistService jwtBlacklistService;
 
 
     @GetMapping("/")
@@ -87,6 +95,37 @@ public class UserController {
 
     @PostMapping("/logout")
     public void logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("onion_token", null);
+        cookie.setHttpOnly(true);  // 자바스크립트에서 접근 불가능하게 설정
+        cookie.setPath("/");       // 쿠키를 보낼 경로 설정
+        cookie.setMaxAge(0); // 쿠키의 유효기간 (1시간)
+
+        // 응답에 쿠키 추가
+        response.addCookie(cookie);
+    }
+
+    @PostMapping("/logout/all")
+    public void logoutAll(@RequestParam(required = false) String requestToken,
+                          @CookieValue(value = "onion_token", required = false) String cookieToken,
+                          HttpServletRequest request,
+                          HttpServletResponse response) {
+        String token = null;
+        String bearerToken = request.getHeader("Authorization");
+
+        if(requestToken != null) {
+            token = requestToken;
+
+        } else if(cookieToken != null) {
+            token = cookieToken;
+
+        } else if(bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            token = bearerToken.substring(7);
+        }
+
+        Instant instant = new Date().toInstant();
+        LocalDateTime expirationTime = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
+        String username = jwtUtil.getUsernameFromToken(token);
+        jwtBlacklistService.addToBlacklist(token, expirationTime, username);
         // JWT를 쿠키에 저장 (HttpOnly 옵션으로 XSS 공격 방지)
         Cookie cookie = new Cookie("onion_token", null);
         cookie.setHttpOnly(true);  // 자바스크립트에서 접근 불가능하게 설정
