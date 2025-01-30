@@ -1,5 +1,6 @@
 package com.onion.backend.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.onion.backend.dto.WriteArticleDto;
@@ -18,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 
 @Service
@@ -29,6 +31,7 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public Article writeArticle(WriteArticleDto dto) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -51,6 +54,16 @@ public class ArticleService {
         articleRepository.save(article);
 
         return article;
+    }
+
+    public List<Article> firstGetArticle(Long boardId) {
+        return articleRepository.findTop10ByBoardIdOrderByCreatedDateDesc(boardId);
+    }
+    public List<Article> getOldArticle(Long boardId, Long articleId) {
+        return articleRepository.findTop10ByBoardIdAndArticleIdLessThanOrderByCreatedDateDesc(boardId, articleId);
+    }
+    public List<Article> getNewArticle(Long boardId, Long articleId) {
+        return articleRepository.findTop10ByBoardIdAndArticleIdGreaterThanOrderByCreatedDateDesc(boardId, articleId);
     }
 
 }

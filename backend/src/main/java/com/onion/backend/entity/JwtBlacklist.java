@@ -2,6 +2,7 @@ package com.onion.backend.entity;
 
 import java.time.LocalDateTime;
 
+import com.onion.backend.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class JwtBlacklist {
+public class JwtBlacklist extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

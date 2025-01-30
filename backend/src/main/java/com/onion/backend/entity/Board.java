@@ -2,6 +2,7 @@ package com.onion.backend.entity;
 
 import java.time.LocalDateTime;
 
+import com.onion.backend.util.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +18,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Board {
+public class Board extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,13 +29,6 @@ public class Board {
 
     @Column(nullable = false)
     private String description;
-
-    @CreatedDate
-    @Column(insertable = true)
-    private LocalDateTime createDate;
-
-    @LastModifiedDate
-    private LocalDateTime updateDate;
 
 
 }
