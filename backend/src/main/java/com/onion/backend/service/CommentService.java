@@ -6,6 +6,8 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import com.onion.backend.dto.WriteArticleDto;
 import com.onion.backend.dto.WriteCommentDto;
@@ -22,6 +24,7 @@ import com.onion.backend.repository.CommentRepository;
 import com.onion.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -84,6 +87,39 @@ public class CommentService {
             .toLocalDateTime();
         Duration duration = Duration.between(localDateTime, dateAsLocalDateTime);
         return Math.abs(duration.toMinutes()) > 1;
+    }
+
+    @Async
+    protected CompletableFuture<Article> getArticle(Long boardId, Long articleId) {
+        Optional<Board> board = boardRepository.findById(boardId);
+        if (board.isEmpty()) {
+            throw new ResourceNotFoundException("board not found");
+        }
+        Optional<Article> article = articleRepository.findById(articleId);
+        if (article.isEmpty() || article.get().getIsDeleted()) {
+            throw new ResourceNotFoundException("article not found");
+        }
+        return CompletableFuture.completedFuture(article.get());
+    }
+    @Async
+    protected CompletableFuture<List<Comment>> getComments(Long articleId) {
+        return CompletableFuture.completedFuture(commentRepository.findByArticleId(articleId));
+    }
+    public CompletableFuture<Article> getArticleWithComment(Long boardId, Long articleId) {
+        CompletableFuture<Article> articleFuture = this.getArticle(boardId, articleId);
+        CompletableFuture<List<Comment>> commentsFuture = this.getComments(articleId);
+        return CompletableFuture.allOf(articleFuture, commentsFuture)
+            .thenApply(voidResult -> {
+                try {
+                    Article article = articleFuture.get();
+                    List<Comment> comments = commentsFuture.get();
+                    article.setComments(comments);
+                    return article;
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            });
     }
 
 

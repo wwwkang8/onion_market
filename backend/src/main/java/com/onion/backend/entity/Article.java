@@ -1,6 +1,8 @@
 package com.onion.backend.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.onion.backend.util.BaseEntity;
@@ -14,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Getter;
@@ -55,6 +58,10 @@ public class Article extends BaseEntity {
     @JsonIgnore
     @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     private Board board;
+
+    @OneToMany
+    @JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private List<Comment> comments =new ArrayList<>();
 
 
 }
