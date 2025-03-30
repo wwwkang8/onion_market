@@ -53,4 +53,15 @@ public class ArticleController {
         return ResponseEntity.ok(article.resultNow());
     }
 
+    // Redis 사용한 조회 기능
+    @GetMapping("/{boardId}/articles/redis/{articleId}")
+    public ResponseEntity<Article> getArticle(@PathVariable Long boardId, @PathVariable Long articleId) {
+        return ResponseEntity.ok(articleService.getArticle(boardId, articleId));
+    }
+
+    //QueryDsl 연습
+//    public ResponseEntity<Article> getArticleQueryDsl(@PathVariable Long boardId, @PathVariable Long articleId) {
+//        return ResponseEntity.ok(articleService.getArticleQueryDsl(boardId, articleId));
+//    }
+
 }
